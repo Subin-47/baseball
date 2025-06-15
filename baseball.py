@@ -527,6 +527,58 @@ st.write('드래프트 지명 순위가 반드시 리그에서의 성공을 보�
 st.title("KBO 드래프트 투자 효율 분석")
 st.subheader("WAR 기준 상위 / 하위 10명")
 
+#___________여기부터 수정_______________
+
+TEAM_COLORS = {
+    "LG": "#1e296d",
+    "두산": "#0f2d52",
+    "한화": "#fa5c00",
+    "SSG": "#c20f2f",
+    "NC": "#142d84",
+    "삼성": "#005bac",
+    "기아": "#c6001e",
+    "KT": "#231f20",
+    "키움": "#891038",
+    "롯데": "#d70f37"
+}
+
+# 2. 선수 카드 HTML 생성 함수
+def player_card(선수):
+    team = 선수["팀"]
+    border_color = TEAM_COLORS.get(team.strip(), "#cccccc")
+    img_file_path = f"images/무제-1-{선수.name + 10}.png"  # 인덱스 1부터 시작하므로 +10
+
+    try:
+        with open(img_file_path, "rb") as img_file:
+            b64_img = base64.b64encode(img_file.read()).decode()
+    except FileNotFoundError:
+        b64_img = ""
+
+    hover_text = f"""
+    입단연도: {선수['연도']}<br>
+    계약금: {선수['계약금 (억)']}억<br>
+    통산 WAR: {선수['통산 WAR']}
+    """
+
+    return f"""
+    <div style="text-align:center; margin:10px;">
+        <img src="data:image/png;base64,{b64_img}"
+             width="120"
+             style="border-radius:10px; border:4px solid {border_color};"
+             title="{hover_text}" />
+        <div style="margin-top:5px; font-weight:bold;">{선수['이름']}</div>
+        <div style="color:gray;">{team}</div>
+    </div>
+    """
+def display_players(df, title):
+    st.markdown(f"### {title}", unsafe_allow_html=True)
+    html = '<div style="display:flex; flex-wrap:wrap; justify-content:center;">'
+    for _, row in df.iterrows():
+        html += player_card(row)
+    html += '</div>'
+    st.markdown(html, unsafe_allow_html=True)
+#______________여기까지 수정_______________
+
 # 상위 10명 데이터
 top_df = pd.DataFrame({
     "이름": ["문성주", "배제성", "홍창기", "김하성", "김혜성", "송성문", "문보경", "박성한", "김호령", "박찬호"],
@@ -549,12 +601,9 @@ bottom_df = pd.DataFrame({
 top_df.index = top_df.index + 1
 bottom_df.index = bottom_df.index + 1
 
-st.markdown("### 🥇 투자 효율 상위 10명")
-st.dataframe(top_df, use_container_width=True)
-
-st.markdown("### 🥵 투자 효율 하위 10명")
-st.dataframe(bottom_df, use_container_width=True)
-
+#수정
+display_players(top_df, "🥇 투자 효율 상위 Top 10")
+display_players(bottom_df, "🥵 투자 효율 하위 Top 10")
 
 st.subheader('3. 우리 팀은 드래프트 전략을 잘 세우는가?')
 
